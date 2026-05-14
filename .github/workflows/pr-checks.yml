@@ -1,0 +1,304 @@
+name: PR Checks
+
+# Acionado quando o aluno abre/atualiza um PR no próprio fork.
+# Valida adesão à metodologia automaticamente. Os checks aqui são
+# PROGRAMÁTICOS (sem IA). A revisão contextual fica a cargo do
+# GitHub Copilot Code Review, guiado por .github/copilot-instructions.md.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ── Verifica formato de commits ────────────────────────────────────
+  commit-lint:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install commitlint
+        run: |
+          npm install --no-save \
+            @commitlint/cli@19 \
+            @commitlint/config-conventional@19
+
+      - name: Validate commit messages
+        run: |
+          npx commitlint \
+            --from=${{ github.event.pull_request.base.sha }} \
+            --to=${{ github.event.pull_request.head.sha }} \
+            --verbose
+
+  # ── Detecta o que mudou pra rodar só o que importa ─────────────────
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.filter.outputs.go }}
+      node: ${{ steps.filter.outputs.node }}
+      modules: ${{ steps.filter.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            go:
+              - 'app/go/**'
+              - 'modules/**/go/**'
+            node:
+              - 'app/node/**'
+              - 'modules/**/node/**'
+            modules:
+              - 'modules/**'
+
+  # ── Build + test + lint Go ─────────────────────────────────────────
+  go-checks:
+    name: Go — build, test, lint
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: ledger
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-retries 10
+      rabbitmq:
+        image: rabbitmq:4.3-management-alpine
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: go mod tidy check
+        working-directory: ./app/go
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: go vet
+        working-directory: ./app/go
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62
+          working-directory: ./app/go
+          args: --timeout=5m
+
+      - name: go test
+        working-directory: ./app/go
+        env:
+          DB_DSN: postgres://app:app@localhost:5432/ledger?sslmode=disable
+          RABBITMQ_URL: amqp://guest:guest@localhost:5672/
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Coverage summary
+        working-directory: ./app/go
+        run: go tool cover -func=coverage.out | tail -1
+
+  # ── Build + test + lint Node ───────────────────────────────────────
+  node-checks:
+    name: Node — build, test, lint
+    needs: changes
+    if: needs.changes.outputs.node == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: ledger
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-retries 10
+      rabbitmq:
+        image: rabbitmq:4.3-management-alpine
+        ports: ["5672:5672"]
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+          cache-dependency-path: app/node/pnpm-lock.yaml
+
+      - name: Install deps
+        working-directory: ./app/node
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: ./app/node
+        run: pnpm lint
+
+      - name: Type check
+        working-directory: ./app/node
+        run: pnpm typecheck
+
+      - name: Test
+        working-directory: ./app/node
+        env:
+          DB_DSN: postgres://app:app@localhost:5432/ledger?sslmode=disable
+          RABBITMQ_URL: amqp://guest:guest@localhost:5672/
+        run: pnpm test
+
+  # ── Heurísticas de metodologia ─────────────────────────────────────
+  methodology-checks:
+    name: Methodology heuristics
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Anti-patterns clássicos
+        run: |
+          set -e
+          echo "== Procurando anti-patterns de tutorial =="
+          ! git diff origin/${{ github.event.pull_request.base.ref }}...HEAD -- 'app/go/**.go' \
+            | grep -E '^\+.*(log\.Fatalf|forever chan struct\{\}|auto-ack: true|amqp\.QueueAutoDelete)' \
+            && echo "OK — sem anti-patterns flagrantes" \
+            || (echo "❌ Anti-pattern detectado nas mudanças. Revisar." && exit 1)
+
+      - name: Toda feature de Go tem teste correspondente
+        run: |
+          set -e
+          # Para cada arquivo *.go adicionado em app/go (não _test.go),
+          # checar se existe *_test.go correspondente OU se o PR também
+          # adiciona um.
+          base=${{ github.event.pull_request.base.sha }}
+          head=${{ github.event.pull_request.head.sha }}
+          added_go=$(git diff --name-only --diff-filter=A "$base" "$head" \
+            | grep -E '^app/go/.*\.go$' | grep -v '_test\.go$' || true)
+          if [ -z "$added_go" ]; then
+            echo "Nenhum arquivo .go novo — skip."
+            exit 0
+          fi
+          missing=0
+          for f in $added_go; do
+            test_file="${f%.go}_test.go"
+            if [ ! -f "$test_file" ]; then
+              echo "❌ Sem teste correspondente: $f → esperado $test_file"
+              missing=$((missing+1))
+            fi
+          done
+          if [ $missing -gt 0 ]; then
+            echo "$missing arquivo(s) Go sem teste. Metodologia violada."
+            exit 1
+          fi
+          echo "OK — todo arquivo Go novo tem teste."
+
+      - name: Mensagens de commit suficientemente ricas
+        run: |
+          set -e
+          base=${{ github.event.pull_request.base.sha }}
+          head=${{ github.event.pull_request.head.sha }}
+          # Para commits de feat/refactor, exigir body com pelo menos 3 linhas.
+          short_msg=0
+          for sha in $(git rev-list "$base..$head"); do
+            type=$(git log -1 --format=%s "$sha" | sed -nE 's/^(feat|refactor)(\([^)]+\))?:.*/\1/p')
+            if [ -z "$type" ]; then continue; fi
+            body_lines=$(git log -1 --format=%b "$sha" | grep -c .)
+            if [ "$body_lines" -lt 3 ]; then
+              echo "⚠️ Commit $sha (${type}) tem body com $body_lines linhas — esperado ≥ 3 (decisão + porquê + armadilha)"
+              short_msg=$((short_msg+1))
+            fi
+          done
+          if [ $short_msg -gt 0 ]; then
+            echo "$short_msg commit(s) com mensagem-aula fraca."
+            echo "Não bloqueia o PR, mas é sinal de absorção rasa — revisar."
+          else
+            echo "OK — mensagens-aula com substância."
+          fi
+
+  # ── Comentário consolidado no PR ───────────────────────────────────
+  summary-comment:
+    name: Comentar sumário no PR
+    needs: [commit-lint, methodology-checks]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post checklist comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## 🤖 Course PR Checks
+
+            Checks programáticos rodaram. Status de cada job no topo do PR.
+
+            ### Revisão contextual
+
+            O **GitHub Copilot Code Review** está configurado pra revisar
+            este PR usando \`.github/copilot-instructions.md\` como guia.
+            Ele cobre o que os checks programáticos não pegam:
+
+            - Sequência TDD red → green → refactor presente
+            - Mensagem-aula com **decisão + porquê + armadilha evitada**
+            - Hexagonal preservada (domínio sem importar adapter)
+            - Anti-patterns de Go e Node
+            - Observabilidade (a partir do módulo 5)
+            - Idempotência (a partir do módulo 6)
+
+            Resolve os comentários do Copilot antes de mergear.
+
+            ### Lembrete da metodologia
+
+            Não avançar pro próximo módulo sem:
+            - [ ] Implementação Go e Node verdes
+            - [ ] README do módulo escrito em palavras próprias
+            - [ ] \`COMPARISON.md\` com 3+ trade-offs reais
+            - [ ] Assessment respondido honestamente
+            - [ ] Apresentação dada sem notas para alguém do time
+
+            Ver \`METHODOLOGY.md\` e \`ROADMAP.md\` pra detalhes.`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
