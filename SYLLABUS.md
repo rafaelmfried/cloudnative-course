@@ -62,10 +62,47 @@ modules/NN-slug/
 ### Módulo 1 — Foundations & Project Setup
 
 **Objetivo**: estabelecer estrutura, ferramentas e padrões que vão sustentar
-todos os módulos seguintes.
+todos os módulos seguintes. **Antes de escrever uma linha de código de domínio,
+o aluno tem que tomar decisões conscientes de versionamento e isolamento de
+dependências** — porque depois que tem produção rodando, mexer nessas escolhas
+custa caro.
 
 **Conceitos cobertos**:
 
+- **Como escolher a versão da linguagem**:
+  - Diferença entre **stable**, **LTS** (Long-Term Support) e **latest**.
+  - Critério: produção exige LTS quando existe (Node tem LTS par, Go tem
+    suporte de 2 versões major). Latest fica em projeto pessoal/experimento.
+  - Como travar: `.tool-versions` (asdf), `.nvmrc` / `engines` (Node),
+    `go.mod` `go` directive (Go). Por que travar — build reproduzível,
+    onboarding sem surpresa, CI determinístico.
+- **Como escolher a versão das bibliotecas**:
+  - Ler CHANGELOG antes de adicionar. Procurar BREAKING CHANGES nas últimas
+    N versões — bumpar uma lib sem ler changelog é causa raiz de incident.
+  - Avaliar maturidade: stars no GitHub não é métrica suficiente — olhar
+    issues abertas, frequência de release, releases recentes com CVEs.
+  - Lockfile é OBRIGATÓRIO (`go.sum`, `pnpm-lock.yaml`). Sem lockfile,
+    build não é reproduzível.
+  - Renovate/Dependabot configurado pra atualizações de patch automáticas;
+    minor e major exigem revisão humana.
+- **Como escolher a versão da infra (Postgres, Rabbit, observability stack)**:
+  - **Stable > LTS > latest** quando o componente é core do sistema. No
+    Prometheus desse curso, usamos 3.5 LTS em vez de 3.12 latest justamente
+    por isso.
+  - Cuidado com major bumps em infra **com dados persistentes**: Postgres
+    18 → 19 exige migração planejada (pg_upgrade, downtime, rollback plan).
+    Não é trocar tag de imagem e dar push.
+  - Sempre travar versão no compose/k8s manifest — `latest` em produção é
+    bug pronto pra acontecer.
+- **Por que isolamento bem feito é o que separa upgrade tranquilo de
+  incident em produção**:
+  - Domínio NÃO depende de tipo concreto de adapter (hexagonal já cuida).
+  - Adapter encapsula a lib externa — trocar pgx por pgx-novo só mexe no
+    adapter, não no caller.
+  - Wire format estável separado do tipo de domínio (envelope JSON ≠
+    Message). Permite trocar protocolo (JSON → Protobuf) sem mexer no core.
+  - Config tipada centralizada — variável de ambiente nova não vira
+    `os.Getenv` espalhado.
 - Arquitetura hexagonal aplicada (não dogmática)
 - Dependency Injection manual — sem framework
 - `cmd/internal` (Go) vs `src/domain/infrastructure` (Node)
@@ -75,12 +112,26 @@ todos os módulos seguintes.
 - Logger estruturado (slog vs pino)
 - Conventional Commits enforcement
 
-**Lab**: subir a stack de infra + criar 2 aplicações "hello" que cumprimentam,
-expõem `/healthz`, leem config tipada, e fazem shutdown limpo em SIGTERM.
+**Lab**:
+
+1. Documentar em `modules/01-foundations/VERSIONS.md` a justificativa de cada
+   versão escolhida — linguagem, libs principais, infra. Citar fonte
+   (release notes, EOL date, LTS schedule).
+2. Subir a stack de infra (versões já travadas no compose).
+3. Criar 2 aplicações "hello" (Go + Node) que: respondem em `/healthz`,
+   leem config tipada (lib tipada, não `os.Getenv` solto), fazem shutdown
+   limpo em SIGTERM.
+4. Trocar 1 lib não-core de propósito (ex: trocar JSON logger por outro
+   compatível) e observar quanto código realmente muda — se mexeu em mais
+   de 1 arquivo, isolamento está fraco.
 
 **Referências**:
 
-- _The Twelve-Factor App_ (12factor.net)
+- _The Twelve-Factor App_ (12factor.net) — em especial Dependencies e Config
+- Go release policy: <https://go.dev/doc/devel/release>
+- Node.js LTS schedule: <https://nodejs.org/en/about/previous-releases>
+- "Choose Boring Technology" — Dan McKinley
+- "Semantic Versioning" — semver.org
 - Code: Kubernetes `cmd/` structure (qualquer repo CNCF)
 - Talk: "Practical Go: Real World Advice For Writing Maintainable Programs" — Dave Cheney
 
@@ -88,6 +139,10 @@ expõem `/healthz`, leem config tipada, e fazem shutdown limpo em SIGTERM.
 
 - App sobe, responde, faz shutdown limpo em ambas linguagens.
 - Config faltando = falha no boot, não em runtime.
+- `VERSIONS.md` justifica cada versão escolhida com link pra fonte oficial.
+- Aluno consegue explicar em voz alta: "se eu precisar atualizar lib X
+  amanhã, que arquivos eu vou mexer?" — resposta com 1-2 arquivos = bom
+  isolamento.
 
 ---
 
