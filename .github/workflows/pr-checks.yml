@@ -199,7 +199,7 @@ jobs:
           # Alinhado ao pnpm travado em modules/01-foundations/VERSIONS.md.
           # Migrar para ler de `packageManager` no package.json quando o
           # scaffold do app Node existir (#23) — fonte única de versão.
-          version: 11
+          version: 11.1.2
 
       - name: Setup Node
         uses: actions/setup-node@v6
