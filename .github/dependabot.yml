@@ -14,7 +14,7 @@ updates:
       include: scope
     labels:
       - dependencies
-      - ci
+      - area/ci
 
   # Módulo Go da aplicação (passa a valer quando app/go/go.mod existir)
   - package-ecosystem: gomod
