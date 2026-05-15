@@ -66,7 +66,8 @@ jobs:
             OWNER | MEMBER | COLLABORATOR) ;;
             *)
               # Só responde se o comentário de fato tentou um comando.
-              if printf '%s\n' "$BODY" | grep -qE '^\s*/[a-z]'; then
+              # [[:space:]] (classe POSIX) — `\s` não é whitespace em ERE.
+              if printf '%s\n' "$BODY" | grep -qE '^[[:space:]]*/[a-z]'; then
                 gh pr comment "$PR" --repo "$REPO" \
                   --body "@$ACTOR — comandos são restritos a mantenedores e colaboradores do repositório."
               fi

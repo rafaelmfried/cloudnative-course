@@ -130,13 +130,13 @@ gh api repos/<seu-user>/cloudnative-course/rulesets \
 | `protect-module-branches` | `module/*` | PR obrigatório, checks verdes, threads resolvidas                              |
 
 > **Status checks obrigatórios**: os rulesets exigem `Conventional Commits`
-> e `Methodology heuristics` — os dois jobs do `pr-checks.yml` que
-> **sempre rodam**. Os jobs `Go — build, test, lint` e `Node — build,
-test, lint` são condicionais (só rodam se Go/Node mudou), por isso
-> **não** entram como required — um check condicional que não roda
-> ficaria "pending" pra sempre e travaria o merge. Se você quiser
-> forçá-los, adicione um job "gate" final no workflow que sempre roda e
-> depende dos demais, e marque só esse gate como required.
+> e `Methodology heuristics` — os dois jobs do `pr-checks.yml` que sempre
+> rodam. Os jobs de build/test/lint de Go e de Node são condicionais (só
+> rodam se Go ou Node mudou), por isso **não** entram como required — um
+> check condicional que não roda ficaria "pending" pra sempre e travaria
+> o merge. Se você quiser forçá-los, adicione um job "gate" final no
+> workflow que sempre roda e depende dos demais, e marque só esse gate
+> como required.
 
 ---
 
