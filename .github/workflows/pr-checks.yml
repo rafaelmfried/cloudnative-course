@@ -15,6 +15,44 @@ permissions:
   pull-requests: write
 
 jobs:
+  # ── Valida o gitflow: branch de origem segue a convenção ───────────
+  # Rulesets do GitHub não restringem o NOME da branch de origem de um
+  # PR — só protegem o destino. Este job enforça o que o ruleset não
+  # consegue: PR para module/* tem que vir de feature/*.
+  branch-naming:
+    name: Branch naming convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate gitflow branch naming
+        run: |
+          base="${{ github.event.pull_request.base.ref }}"
+          head="${{ github.event.pull_request.head.ref }}"
+          echo "PR: $head -> $base"
+          case "$base" in
+            module/*)
+              if [[ "$head" != feature/* ]]; then
+                echo "::error::PR para 'module/*' deve vir de 'feature/*'. Recebido: '$head'."
+                echo "Gitflow do curso: main <- module/NN <- feature/*"
+                exit 1
+              fi
+              echo "OK: feature/* -> module/* respeita o gitflow."
+              ;;
+            main|master)
+              case "$head" in
+                module/*|chore/*|docs/*|ci/*|fix/*|hotfix/*|style/*)
+                  echo "OK: '$head' -> '$base' permitido."
+                  ;;
+                *)
+                  echo "::error::PR para '$base' deve vir de module/*, chore/*, docs/*, ci/*, fix/*, hotfix/* ou style/*. Recebido: '$head'."
+                  exit 1
+                  ;;
+              esac
+              ;;
+            *)
+              echo "Base '$base' sem regra de naming — OK."
+              ;;
+          esac
+
   # ── Verifica formato de commits ────────────────────────────────────
   commit-lint:
     name: Conventional Commits

@@ -115,9 +115,11 @@ Types permitidos:
 - `refactor` — mudança sem alterar comportamento
 - `test` — adicionar/ajustar testes (use `test(red): ...` no ciclo TDD)
 - `docs` — documentação
-- `chore` — manutenção (deps, build, ci)
+- `chore` — manutenção geral
 - `perf` — melhoria de performance
 - `style` — formatação (raro)
+- `ci` — workflows e automação de CI/CD
+- `build` — build system, dependências, empacotamento
 
 Scopes permitidos (alinhar com camada do módulo):
 `config`, `domain`, `broker`, `storage`, `http`, `cmd/<bin>`, `infra`, `docs`,
