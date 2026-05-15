@@ -1,0 +1,13 @@
+{
+  // CODEOWNERS não é Markdown. Tratá-lo como linguagem `ignore`
+  // (sintaxe estilo .gitignore) faz o VS Code NÃO aplicar formatter
+  // nele — sem isso, o Prettier converte o pattern `*` em `-` ao salvar.
+  "files.associations": {
+    "CODEOWNERS": "ignore"
+  },
+
+  // Garante que arquivos sem formatter dedicado não sejam tocados.
+  "[ignore]": {
+    "editor.formatOnSave": false
+  }
+}

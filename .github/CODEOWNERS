@@ -1,0 +1,24 @@
+# CODEOWNERS — quem revisa o que.
+# Aponta para o mantenedor do upstream.
+# NO SEU FORK: troque @rafaelmfried pelo seu usuario GitHub.
+#
+# ATENCAO: este arquivo NAO e Markdown. Nao deixe um formatter (Prettier)
+# rodar nele — o `*` abaixo seria convertido em `-` e o arquivo quebraria.
+# O repo ja protege isso via .prettierignore e .vscode/settings.json.
+
+# Padrao: tudo
+*                     @rafaelmfried
+
+# Material didatico
+/README.md            @rafaelmfried
+/SYLLABUS.md          @rafaelmfried
+/METHODOLOGY.md       @rafaelmfried
+/ROADMAP.md           @rafaelmfried
+/CONTRIBUTING.md      @rafaelmfried
+
+# Infra compartilhada
+/app/infra/           @rafaelmfried
+
+# Automacao do repo
+/.github/             @rafaelmfried
+/commitlint.config.js @rafaelmfried
