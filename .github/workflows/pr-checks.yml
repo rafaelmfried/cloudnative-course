@@ -24,9 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate gitflow branch naming
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          base="${{ github.event.pull_request.base.ref }}"
-          head="${{ github.event.pull_request.head.ref }}"
+          base="$BASE_REF"
+          head="$HEAD_REF"
           echo "PR: $head -> $base"
           case "$base" in
             module/*)
