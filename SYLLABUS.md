@@ -57,6 +57,48 @@ modules/NN-slug/
 
 ---
 
+## As duas trilhas — técnica e colaboração
+
+Este curso tem **duas trilhas que andam juntas em cada módulo**:
+
+- **Trilha técnica** — construir o mini-ledger, dominar Go/Node,
+  concorrência, observabilidade, resiliência. É o conteúdo dos 13 módulos.
+- **Trilha de colaboração** — operar o projeto como se opera um repositório
+  de engenharia profissional: issues, PRs revisados, milestones, project
+  board, releases, packages, design docs, deploy real.
+
+A razão da segunda trilha: o que trava a maioria dos desenvolvedores que
+tentam contribuir em projetos OSS grandes (Kubernetes, Prometheus) ou no
+monorepo de uma empresa não é falta de habilidade técnica — é não conhecer
+o **ritual da engenharia colaborativa**. Este repositório inteiro é um
+projeto open source bem-governado, e o aluno o opera de ponta a ponta.
+Ao terminar, o ritual é hábito.
+
+Cada módulo introduz **um aspecto novo de colaboração**, crescendo em
+sofisticação:
+
+| Módulo                   | Aspecto de colaboração                                   | O que o aluno pratica                                     |
+| ------------------------ | -------------------------------------------------------- | --------------------------------------------------------- |
+| 1 — Foundations          | Gitflow, PR, Conventional Commits, code review           | Abrir PR no padrão profissional; commit como aula         |
+| 2 — Testing/TDD          | Issues + Milestones                                      | Feature vira issue (`Closes #N`); módulo é milestone      |
+| 3 — Concurrency          | Project board + code review rigoroso                     | Mover cards Backlog→Done; revisar o próprio diff          |
+| 4 — Resilience           | Discussions / RFC                                        | Discutir decisão de design antes de implementar           |
+| 5 — Observability        | ADR (Architecture Decision Records)                      | Registrar o porquê das decisões                           |
+| 6 — Persistence          | CHANGELOG disciplinado + SemVer                          | Comunicar breaking change; pensar compatibilidade         |
+| 7 — Messaging            | Triagem de issues (labels, prioridade)                   | Gerenciar um backlog, não só executar tarefa              |
+| 8 — HTTP/API             | Primeira Release formal + release notes                  | API como contrato público; versionar com responsabilidade |
+| 9 — Security             | SECURITY.md na prática + PRs do Dependabot               | Reportar/responder vulnerabilidade; manter deps           |
+| 10 — Performance         | Benchmark como evidência                                 | Provar otimização com número, não com "ficou rápido"      |
+| 11 — Deployment          | Packages (ghcr.io) + CI/CD + Releases atreladas a deploy | Publicar artefato; pipeline build→test→scan→push→deploy   |
+| 12 — Distributed systems | Design doc / proposal (estilo KEP)                       | Propor mudança de arquitetura e submetê-la a revisão      |
+| 13 — Capstone            | Tudo junto + deploy real + load test + relatório         | Operar um projeto de produção ponta a ponta               |
+
+Ao chegar no Módulo 13, o aluno já usou issues, milestones, board,
+discussions, ADRs, changelog, releases, packages e design docs — não como
+teoria, como prática repetida módulo após módulo.
+
+---
+
 ## Os 13 módulos
 
 ### Módulo 1 — Foundations & Project Setup
@@ -511,27 +553,61 @@ sistemas diferentes (Postgres standby, Cassandra, DynamoDB) em 5 minutos.
 
 ### Módulo 13 — Capstone & Integração final
 
-**Objetivo**: consolidar, validar, integrar todos os módulos num único exercício
-que prova absorção real.
+**Objetivo**: tirar o sistema do "roda no meu Docker" e levá-lo a produção
+real — deploy no GCP, teste de carga profissional, relatório técnico. É o
+módulo que prova que o aluno sabe **validar e operar** sistema, não só
+escrevê-lo.
 
 **Entregáveis**:
 
-1. **Incident postmortem** gravado do app. Instrutor injeta 1 falha real
-   (ex: liveness probe matando pod sob load, conexão pool esgotando, race
-   no saldo). Aluno investiga, identifica, documenta em formato SRE
-   (timeline, root cause, contributing factors, action items).
-2. **System design review** do próprio sistema. Perguntas: "Escala pra 10x
-   tráfego — o que muda? E 100x?" Aluno desenha o novo diagrama + ADRs das
-   decisões.
-3. **ADRs retrospectivas** das decisões dos 12 módulos (Architecture Decision Records).
-4. **Apresentação final gravada** — aluno responde:
-   - 7 perguntas de calibração (abaixo)
-   - 5 perguntas profundas sobre o sistema (escolhidas pela equipe)
-   - Em < 90s cada, sem consultar notas
-5. **Self-scorecard** por módulo: o que dominou, gaps, plano de fechamento.
+1. **Deploy real no GCP** — o mini-ledger sai do Docker local pra produção
+   (Cloud Run ou GKE). O aluno enfrenta o que só produção ensina: TLS, DNS,
+   secrets gerenciados, observabilidade remota, cold start, custo.
 
-**Critério de fechamento**: aluno auto-avalia em CADA módulo "passou" ou "ainda
-tem gap" honestamente. Plano explícito pros gaps.
+2. **Load testing com k6** — bateria completa de perfis:
+   - `smoke` — sanidade, carga mínima
+   - `load` — carga nominal esperada
+   - `stress` — sobe a carga até o sistema quebrar
+   - `spike` — pico súbito de tráfego
+   - `soak` — carga sustentada por horas, caça memory leak e degradação
+
+3. **Relatório técnico de performance** — o artefato de portfólio. Escrito
+   como um Staff Engineer entrega:
+   1. **Sumário executivo** — 1 parágrafo: o sistema sustenta ~X RPS dentro
+      do SLO; gargalo dominante é Y; recomendação prioritária é Z.
+   2. **Contexto e objetivo** — o que é o sistema, qual SLO se quer validar.
+   3. **Ambiente de teste** — infra GCP (specs, versões, topologia),
+      reprodutível.
+   4. **Metodologia** — perfis k6, carga, duração, métricas coletadas.
+   5. **Baseline** — carga nominal: P50/P95/P99, throughput, error rate.
+   6. **Resultados por cenário** — tabelas e gráficos; o _knee point_
+      (onde degrada) e a saturação de recurso (CPU, memória, conexões, DB pool).
+   7. **Análise de gargalo** — root cause **com evidência**: profiling,
+      traces, métricas USE/RED.
+   8. **Recomendações** — capacity planning e ajustes, priorizados.
+   9. **Riscos e limitações** — o que o teste não cobriu.
+   10. **Apêndice** — scripts k6, dashboards, dados crus.
+
+4. **Incident postmortem** — instrutor injeta 1 falha real (liveness probe
+   matando pod sob load, connection pool esgotando, race no saldo). Aluno
+   investiga e documenta em formato SRE (timeline, root cause, contributing
+   factors, action items).
+
+5. **System design review** do próprio sistema — "escala pra 10x tráfego,
+   o que muda? E 100x?". Diagrama novo + ADRs.
+
+6. **Release final `v1.0.0`** — todos os milestones fechados, release notes
+   consolidadas, imagem publicada como package.
+
+7. **Apresentação final gravada** — aluno responde as 7 perguntas de
+   calibração + 5 perguntas profundas sobre o sistema, em < 90s cada, sem
+   notas.
+
+8. **Self-scorecard** por módulo — o que dominou, gaps, plano de fechamento.
+
+**Critério de fechamento**: aplicação no ar no GCP, relatório de load test
+completo e defensável, postmortem documentado, release `v1.0.0` publicada,
+self-scorecard honesto.
 
 ---
 
