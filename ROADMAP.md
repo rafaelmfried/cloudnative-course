@@ -32,22 +32,29 @@ flowchart TD
     subgraph Consolidação["Consolidação — produção e teoria"]
         M11["11 · Cloud-native deployment"]
         M12["12 · Distributed systems fundamentals"]
-        M13["13 · Capstone & integração final"]
+        M13["13 · Capstone & integração final<br/><i>deploy GCP + load test + relatório</i>"]
+    end
+
+    subgraph FaseFinal["Fase final — aplicação no mundo real"]
+        Contrib["Contribuição Real<br/><i>1+ PR mergeado em projeto OSS</i>"]
     end
 
     M1 --> M2 --> M3 --> M4
     M4 -.->|"ledger feature-complete a partir daqui"| M5
     M5 --> M6 --> M7 --> M8 --> M9 --> M10 --> M11 --> M12 --> M13
+    M13 --> Contrib
 
     classDef foundational fill:#1e3a8a,stroke:#1e40af,color:#fff
     classDef core fill:#065f46,stroke:#047857,color:#fff
     classDef crosscut fill:#7c2d12,stroke:#9a3412,color:#fff
     classDef final fill:#581c87,stroke:#6b21a8,color:#fff
+    classDef realworld fill:#9a3412,stroke:#c2410c,color:#fff
 
     class M1,M2 foundational
     class M3,M4,M5,M6,M7,M8 core
     class M9,M10 crosscut
     class M11,M12,M13 final
+    class Contrib realworld
 ```
 
 ---
