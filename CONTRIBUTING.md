@@ -98,6 +98,10 @@ revisar o próprio código é o que o modelo solo treina.
 - **Rulesets ativos** — a _definição_ (JSON) vem versionada, mas o
   ruleset _ativo_ não é herdado. Cada fork precisa importar.
 - **GitHub Copilot Code Review** — habilitar nas configurações do fork.
+- **Aprovação de PR por GitHub Actions** — a opção "Allow GitHub Actions
+  to create and approve pull requests" (Settings → Actions → General) não
+  é herdada. Sem ela o comando `/approve` falha: o `github-actions[bot]`
+  não consegue submeter reviews aprovadas.
 
 ---
 
@@ -153,8 +157,9 @@ gh api repos/<seu-user>/cloudnative-course/rulesets \
 
 A regra de ouro: **tudo que é versionável vive no repo** (workflows,
 configs, JSON de ruleset, CODEOWNERS) pra que o fork nasça o mais
-próximo possível do padrão. O único passo manual por fork é importar
-os rulesets.
+próximo possível do padrão. O que não é versionável fica como passo
+manual por fork — importar os rulesets, habilitar o Copilot Code Review
+e a flag de aprovação por Actions — tudo no checklist abaixo.
 
 ---
 
@@ -179,10 +184,12 @@ Um comentário pode conter vários comandos, um por linha. `/hold` casa
 com o `wip-guard.yml`: enquanto a label `do-not-merge/hold` estiver
 presente, o merge fica bloqueado.
 
-> Nota: `/approve` submete a review como o `github-actions[bot]`. Isso
-> **não** conta para `required_approving_review_count` de branch
-> protection — mas o ruleset deste curso usa `count: 0`, então o valor
-> do comando é o registro de processo, não desbloquear o merge.
+> Nota: `/approve` submete a review como o `github-actions[bot]` — exige
+> que "Allow GitHub Actions to create and approve pull requests" esteja
+> habilitado no fork (ver checklist). A review **não** conta para
+> `required_approving_review_count` de branch protection — mas o ruleset
+> deste curso usa `count: 0`, então o valor do comando é o registro de
+> processo, não desbloquear o merge.
 
 ---
 
@@ -194,3 +201,6 @@ presente, o merge fica bloqueado.
 - [ ] `protect-module-branches` importado
 - [ ] `CODEOWNERS` editado pro seu usuário
 - [ ] GitHub Copilot Code Review habilitado no fork (Settings → Copilot)
+- [ ] "Allow GitHub Actions to create and approve pull requests" habilitado
+      (Settings → Actions → General → Workflow permissions) — necessário
+      pro comando `/approve`
