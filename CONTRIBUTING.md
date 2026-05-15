@@ -157,8 +157,9 @@ gh api repos/<seu-user>/cloudnative-course/rulesets \
 
 A regra de ouro: **tudo que é versionável vive no repo** (workflows,
 configs, JSON de ruleset, CODEOWNERS) pra que o fork nasça o mais
-próximo possível do padrão. O único passo manual por fork é importar
-os rulesets.
+próximo possível do padrão. O que não é versionável fica como passo
+manual por fork — importar os rulesets, habilitar o Copilot Code Review
+e a flag de aprovação por Actions — tudo no checklist abaixo.
 
 ---
 
