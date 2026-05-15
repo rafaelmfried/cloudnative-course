@@ -1,0 +1,128 @@
+name: Command handler
+
+# Interpreta comandos em comentários de pull request — inspirado no
+# chat-ops do Prow (Kubernetes), adaptado via GitHub Action.
+#
+# Comandos reconhecidos:
+#   /approve              submete uma review aprovada no PR
+#   /lgtm                 aplica a label `lgtm`
+#   /hold    /unhold      aplica/remove `do-not-merge/hold`
+#   /label X /remove-label X   gerencia uma label
+#   /assign [@user]       atribui o PR (a quem comentou, se sem @user)
+#   /unassign [@user]     remove a atribuição
+#   /cc @user             solicita review de alguém
+#   /help                 comenta a lista de comandos
+#
+# Os comandos são restritos a OWNER / MEMBER / COLLABORATOR do repositório.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  handle-command:
+    name: Handle PR command
+    # Só comentários em pull request (issue_comment dispara para issues também).
+    if: github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse and execute commands
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.issue.number }}
+          BODY: ${{ github.event.comment.body }}
+          ACTOR: ${{ github.event.comment.user.login }}
+          ASSOCIATION: ${{ github.event.comment.author_association }}
+          # Texto do /help — definido aqui como env var (não heredoc no
+          # script) para não quebrar a indentação do block scalar do run.
+          HELP_TEXT: |
+            ### Comandos disponíveis
+
+            | Comando | Efeito |
+            |---|---|
+            | `/approve` | Submete uma review aprovada |
+            | `/lgtm` | Aplica a label `lgtm` |
+            | `/hold` · `/unhold` | Aplica/remove `do-not-merge/hold` (bloqueia o merge) |
+            | `/label <nome>` · `/remove-label <nome>` | Gerencia uma label |
+            | `/assign [@user]` | Atribui o PR (a você, se sem `@user`) |
+            | `/unassign [@user]` | Remove a atribuição |
+            | `/cc @user` | Solicita review de alguém |
+            | `/help` | Mostra esta lista |
+
+            Comandos são restritos a mantenedores e colaboradores do repositório.
+        run: |
+          set -uo pipefail
+
+          # ── Permissão ───────────────────────────────────────────────
+          # author_association vem do evento — OWNER/MEMBER/COLLABORATOR
+          # têm permissão de escrita; o resto, não.
+          case "$ASSOCIATION" in
+            OWNER | MEMBER | COLLABORATOR) ;;
+            *)
+              # Só responde se o comentário de fato tentou um comando.
+              # [[:space:]] (classe POSIX) — `\s` não é whitespace em ERE.
+              if printf '%s\n' "$BODY" | grep -qE '^[[:space:]]*/[a-z]'; then
+                gh pr comment "$PR" --repo "$REPO" \
+                  --body "@$ACTOR — comandos são restritos a mantenedores e colaboradores do repositório."
+              fi
+              echo "Sem permissão (association: $ASSOCIATION) — encerrando."
+              exit 0
+              ;;
+          esac
+
+          # ── Processa cada linha do comentário ───────────────────────
+          handled=0
+          while IFS= read -r raw; do
+            line="$(printf '%s' "$raw" | xargs)" # trim
+            cmd="${line%% *}"                    # primeira palavra
+            arg="$(printf '%s' "${line#"$cmd"}" | xargs | tr -d '@')"
+
+            case "$cmd" in
+              /approve)
+                gh pr review "$PR" --repo "$REPO" --approve \
+                  --body "Aprovado via \`/approve\` por @$ACTOR." \
+                  && echo "/approve aplicado" && handled=1 ;;
+              /lgtm)
+                gh pr edit "$PR" --repo "$REPO" --add-label "lgtm" \
+                  && echo "/lgtm aplicado" && handled=1 ;;
+              /hold)
+                gh pr edit "$PR" --repo "$REPO" --add-label "do-not-merge/hold" \
+                  && echo "/hold aplicado" && handled=1 ;;
+              /unhold)
+                gh pr edit "$PR" --repo "$REPO" --remove-label "do-not-merge/hold" \
+                  && echo "/unhold aplicado" && handled=1 ;;
+              /label)
+                [ -n "$arg" ] && gh pr edit "$PR" --repo "$REPO" --add-label "$arg" \
+                  && echo "/label $arg aplicado" && handled=1 ;;
+              /remove-label)
+                [ -n "$arg" ] && gh pr edit "$PR" --repo "$REPO" --remove-label "$arg" \
+                  && echo "/remove-label $arg aplicado" && handled=1 ;;
+              /assign)
+                user="${arg:-$ACTOR}"
+                gh pr edit "$PR" --repo "$REPO" --add-assignee "$user" \
+                  && echo "/assign $user aplicado" && handled=1 ;;
+              /unassign)
+                user="${arg:-$ACTOR}"
+                gh pr edit "$PR" --repo "$REPO" --remove-assignee "$user" \
+                  && echo "/unassign $user aplicado" && handled=1 ;;
+              /cc)
+                [ -n "$arg" ] && gh pr edit "$PR" --repo "$REPO" --add-reviewer "$arg" \
+                  && echo "/cc $arg aplicado" && handled=1 ;;
+              /help)
+                gh pr comment "$PR" --repo "$REPO" --body "$HELP_TEXT" \
+                  && echo "/help respondido" && handled=1 ;;
+              /*)
+                # Linha começa com '/' mas não é um comando conhecido —
+                # provavelmente texto. Ignora em silêncio.
+                : ;;
+            esac
+          done <<< "$BODY"
+
+          [ "$handled" -eq 0 ] && echo "Nenhum comando reconhecido no comentário."
+          exit 0
