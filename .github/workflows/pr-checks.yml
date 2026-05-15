@@ -39,11 +39,11 @@ jobs:
               ;;
             main|master)
               case "$head" in
-                module/*|chore/*|docs/*|fix/*|hotfix/*)
+                module/*|chore/*|docs/*|ci/*|fix/*|hotfix/*|style/*)
                   echo "OK: '$head' -> '$base' permitido."
                   ;;
                 *)
-                  echo "::error::PR para '$base' deve vir de module/*, chore/*, docs/*, fix/* ou hotfix/*. Recebido: '$head'."
+                  echo "::error::PR para '$base' deve vir de module/*, chore/*, docs/*, ci/*, fix/*, hotfix/* ou style/*. Recebido: '$head'."
                   exit 1
                   ;;
               esac
