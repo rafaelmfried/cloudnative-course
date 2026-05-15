@@ -1,4 +1,4 @@
-# Auto-label de PR por caminho de arquivo (actions/labeler v5).
+# Auto-label de PR por caminho de arquivo (actions/labeler v6).
 # Aplica area/* e module/* conforme os arquivos que o PR toca.
 # kind/* e size/* são aplicados por outros jobs do pr-labeler.yml.
 

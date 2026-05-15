@@ -79,9 +79,9 @@ jobs:
           # ── Processa cada linha do comentário ───────────────────────
           handled=0
           while IFS= read -r raw; do
-            line="$(printf '%s' "$raw" | xargs)" # trim
+            line="$(printf '%s' "$raw" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')" # trim
             cmd="${line%% *}"                    # primeira palavra
-            arg="$(printf '%s' "${line#"$cmd"}" | xargs | tr -d '@')"
+            arg="$(printf '%s' "${line#"$cmd"}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
             case "$cmd" in
               /approve)
@@ -104,16 +104,19 @@ jobs:
                 [ -n "$arg" ] && gh pr edit "$PR" --repo "$REPO" --remove-label "$arg" \
                   && echo "/remove-label $arg aplicado" && handled=1 ;;
               /assign)
-                user="${arg:-$ACTOR}"
-                gh pr edit "$PR" --repo "$REPO" --add-assignee "$user" \
-                  && echo "/assign $user aplicado" && handled=1 ;;
+                users="$(printf '%s' "${arg:-$ACTOR}" | tr -d '@' | tr -s '[:space:]' ',' | sed 's/^,*//;s/,*$//')"
+                [ -z "$users" ] && users="$ACTOR"
+                gh pr edit "$PR" --repo "$REPO" --add-assignee "$users" \
+                  && echo "/assign $users aplicado" && handled=1 ;;
               /unassign)
-                user="${arg:-$ACTOR}"
-                gh pr edit "$PR" --repo "$REPO" --remove-assignee "$user" \
-                  && echo "/unassign $user aplicado" && handled=1 ;;
+                users="$(printf '%s' "${arg:-$ACTOR}" | tr -d '@' | tr -s '[:space:]' ',' | sed 's/^,*//;s/,*$//')"
+                [ -z "$users" ] && users="$ACTOR"
+                gh pr edit "$PR" --repo "$REPO" --remove-assignee "$users" \
+                  && echo "/unassign $users aplicado" && handled=1 ;;
               /cc)
-                [ -n "$arg" ] && gh pr edit "$PR" --repo "$REPO" --add-reviewer "$arg" \
-                  && echo "/cc $arg aplicado" && handled=1 ;;
+                users="$(printf '%s' "$arg" | tr -d '@' | tr -s '[:space:]' ',')"
+                [ -n "$users" ] && gh pr edit "$PR" --repo "$REPO" --add-reviewer "$users" \
+                  && echo "/cc $users aplicado" && handled=1 ;;
               /help)
                 gh pr comment "$PR" --repo "$REPO" --body "$HELP_TEXT" \
                   && echo "/help respondido" && handled=1 ;;
