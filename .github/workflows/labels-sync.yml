@@ -1,0 +1,33 @@
+name: Labels sync
+
+# Sincroniza as labels do repositório com .github/labels.yml.
+# Roda quando labels.yml muda na main, ou manualmente.
+# No fork de cada aluno: rodar uma vez via "Run workflow" pra criar as
+# labels (ou deixar disparar no primeiro push que tocar o arquivo).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/labels.yml"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync:
+    name: Sync labels from labels.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply labels
+        uses: crazy-max/ghaction-github-labeler@v5
+        with:
+          yaml-file: .github/labels.yml
+          # skip-delete: não remove labels fora do arquivo (ex: labels
+          # default do GitHub, ou criadas manualmente). Edição é só via
+          # labels.yml, mas a remoção é conservadora.
+          skip-delete: true
+          dry-run: false

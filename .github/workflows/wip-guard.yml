@@ -1,0 +1,30 @@
+name: WIP guard
+
+# Bloqueia o merge enquanto o PR tiver uma label do-not-merge/*.
+# Reavalia toda vez que uma label é adicionada ou removida — assim,
+# tirar a label do-not-merge/wip libera o merge sem precisar de push.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  block-do-not-merge:
+    name: Block do-not-merge labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for do-not-merge labels
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          echo "Labels do PR: $LABELS"
+          if echo "$LABELS" | grep -q 'do-not-merge/'; then
+            blocked=$(echo "$LABELS" | grep -o 'do-not-merge/[a-z-]*' | tr '\n' ' ')
+            echo "::error::Merge bloqueado por label: $blocked"
+            echo "Remova a label do-not-merge/* para liberar o merge."
+            exit 1
+          fi
+          echo "OK — nenhuma label de bloqueio. Merge liberado."
