@@ -1,0 +1,31 @@
+name: Merge conflict label
+
+# Aplica a label needs-rebase em PRs que ficaram com conflito de merge
+# (branch desatualizada em relação à base). Remove a label quando o
+# conflito é resolvido. Reavalia quando a base (main) recebe push.
+
+on:
+  push:
+    branches: [main]
+  pull_request_target:
+    # opened/reopened: pega PR que já nasce com conflito.
+    # synchronize: reavalia a cada push na branch do PR.
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label-conflicts:
+    name: Flag PRs with merge conflict
+    runs-on: ubuntu-latest
+    steps:
+      - uses: eps1lon/actions-label-merge-conflict@v3
+        with:
+          dirtyLabel: "needs-rebase"
+          repoToken: ${{ github.token }}
+          commentOnDirty: >
+            Esta branch tem conflito de merge com a base.
+            Faça rebase ou merge da base e resolva os conflitos —
+            a label needs-rebase sai sozinha quando estiver limpo.
