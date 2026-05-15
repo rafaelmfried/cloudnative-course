@@ -136,14 +136,50 @@ Vai acontecer. Sprint apertada, incidente em produção, viagem.
 
 ---
 
+## Fase final — Contribuição Real (pós-módulo 13)
+
+O curso não termina no módulo 13. Termina quando o aluno **aplica o que
+aprendeu num projeto open source de verdade**.
+
+Depois de operar o repositório-curso de ponta a ponta — issues, PRs,
+milestones, releases, deploy, load test — o aluno domina o ritual da
+engenharia colaborativa. A Fase Final transforma "eu acho que conseguiria
+contribuir" em "eu contribuí, está mergeado, aqui está o link".
+
+**Entregável**: pelo menos **1 contribuição real mergeada** num projeto
+open source de verdade — tipicamente uma `good first issue` num projeto
+CNCF, ou uma correção de documentação/bug num repositório que o aluno usa.
+
+**Por que isso fecha o curso**: a maioria dos desenvolvedores não trava na
+contribuição OSS por falta de habilidade técnica — trava por não conhecer
+o ritual (ler `CONTRIBUTING.md`, pegar issue, abrir PR no padrão, passar
+por review, respeitar o ciclo de release). O curso inteiro treinou esse
+ritual num ambiente controlado; a Fase Final é a aplicação no mundo real.
+
+### Portfólio com que o aluno termina
+
+1. **O repositório do curso completo** — fork dele: 13 módulos, gitflow
+   limpo, releases, board fechado, `v1.0.0` publicada.
+2. **O relatório de load test** do deploy no GCP — artefato técnico de
+   nível sênior, defensável numa entrevista.
+3. **1+ PR mergeado** em projeto open source real — prova de colaboração.
+
+Os três juntos são um portfólio concreto: não "eu sei", e sim "eu fiz,
+está aqui".
+
+---
+
 ## Saída do roadmap
 
-Ao fechar o módulo 13, o aluno:
+Ao fechar o módulo 13 e a Fase Final, o aluno:
 
 - Implementou e operou um ledger transacional em Go e Node.
 - Discutiu trade-offs reais em pelo menos 13 pontos do sistema.
-- Documentou postmortem, ADRs, e self-scorecard honesto.
-- Tem repo público (próprio ou contribuição) refletindo o caminho.
+- Levou o sistema a produção no GCP e validou com load test profissional.
+- Documentou postmortem, ADRs, relatório técnico e self-scorecard honesto.
+- Operou o ferramental completo do GitHub — issues, milestones, board,
+  releases, packages, design docs.
+- Fez ao menos uma contribuição real mergeada em projeto open source.
 
 O que vem depois fica em aberto. Não é continuação obrigatória — é base
 sólida pra escolher próxima direção (system design profundo, observabilidade
