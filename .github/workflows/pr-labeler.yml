@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # issues: write — labels são sub-recurso de issues na API REST; sem
+  # isso o `gh label create` do job kind-label não cria label inexistente
+  # (caso de fork onde o Labels sync ainda não rodou).
+  issues: write
 
 jobs:
   # ── area/* e module/* por caminho ──────────────────────────────────
@@ -36,6 +40,7 @@ jobs:
       - name: Derive kind/* from PR title
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
           TITLE: ${{ github.event.pull_request.title }}
         run: |
@@ -55,14 +60,15 @@ jobs:
               exit 0
               ;;
           esac
-          # Garante que a label exista antes de aplicá-la — gh pr edit
-          # --add-label falha se a label não existir no repo (caso de um
-          # fork onde o Labels sync ainda não rodou). O create sem --force
-          # não sobrescreve a label se ela já existir (cor/descrição
-          # ficam a cargo do labels.yml).
-          gh label create "$kind" --color 1d76db 2>/dev/null || true
+          # --repo explícito: este job não faz checkout, então não há
+          # diretório git pro `gh` inferir o repositório. Sem --repo, o
+          # `gh` falha com "not a git repository".
+          # gh label create best-effort: cria a label se não existir (cor
+          # e descrição definitivas ficam a cargo do labels.yml); não
+          # sobrescreve se já existir.
+          gh label create "$kind" --repo "$REPO" --color 1d76db 2>/dev/null || true
           echo "Aplicando $kind"
-          gh pr edit "$PR" --add-label "$kind"
+          gh pr edit "$PR" --repo "$REPO" --add-label "$kind"
 
   # ── size/* pelo volume de mudança ──────────────────────────────────
   size-label:
