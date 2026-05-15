@@ -1,0 +1,13 @@
+# Arquivos que NUNCA devem passar por Prettier.
+
+# CODEOWNERS não é Markdown. Sem extensão, o Prettier o trataria como
+# Markdown e converteria o pattern `*` em `-`, quebrando o arquivo.
+.github/CODEOWNERS
+
+# Rulesets exportados do GitHub — formato controlado pela API, não mexer.
+.github/rulesets/
+
+# Lockfiles e artefatos gerados
+pnpm-lock.yaml
+dist/
+coverage/
