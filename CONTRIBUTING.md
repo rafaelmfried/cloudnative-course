@@ -124,15 +124,15 @@ gh api repos/<seu-user>/cloudnative-course/rulesets \
 
 ### O que cada ruleset garante
 
-| Ruleset                   | Aplica a   | Garante                                                       |
-| ------------------------- | ---------- | ------------------------------------------------------------- |
+| Ruleset                   | Aplica a   | Garante                                                                        |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------ |
 | `protect-main`            | `main`     | PR obrigatório, checks verdes, threads resolvidas, sem force-push, sem deleção |
-| `protect-module-branches` | `module/*` | PR obrigatório, checks verdes, threads resolvidas             |
+| `protect-module-branches` | `module/*` | PR obrigatório, checks verdes, threads resolvidas                              |
 
 > **Status checks obrigatórios**: os rulesets exigem `Conventional Commits`
 > e `Methodology heuristics` — os dois jobs do `pr-checks.yml` que
 > **sempre rodam**. Os jobs `Go — build, test, lint` e `Node — build,
-> test, lint` são condicionais (só rodam se Go/Node mudou), por isso
+test, lint` são condicionais (só rodam se Go/Node mudou), por isso
 > **não** entram como required — um check condicional que não roda
 > ficaria "pending" pra sempre e travaria o merge. Se você quiser
 > forçá-los, adicione um job "gate" final no workflow que sempre roda e
@@ -142,19 +142,47 @@ gh api repos/<seu-user>/cloudnative-course/rulesets \
 
 ## Camadas de proteção (resumo)
 
-| Camada                            | Garante                                                        |
-| --------------------------------- | -------------------------------------------------------------- |
-| Ruleset `protect-main`            | Nada entra na `main` sem PR + checks + threads resolvidas      |
-| Ruleset `protect-module-branches` | `feature → module` passa por PR                                |
-| `pr-checks.yml`                   | Conventional Commits, naming, testes, lint, heurísticas        |
-| Copilot Code Review               | Revisão contextual via `copilot-instructions.md`               |
-| `CODEOWNERS`                      | Define quem é notificado pra revisar                           |
-| `commitlint.config.js`            | Formato de mensagem de commit                                  |
+| Camada                            | Garante                                                   |
+| --------------------------------- | --------------------------------------------------------- |
+| Ruleset `protect-main`            | Nada entra na `main` sem PR + checks + threads resolvidas |
+| Ruleset `protect-module-branches` | `feature → module` passa por PR                           |
+| `pr-checks.yml`                   | Conventional Commits, naming, testes, lint, heurísticas   |
+| Copilot Code Review               | Revisão contextual via `copilot-instructions.md`          |
+| `CODEOWNERS`                      | Define quem é notificado pra revisar                      |
+| `commitlint.config.js`            | Formato de mensagem de commit                             |
 
 A regra de ouro: **tudo que é versionável vive no repo** (workflows,
 configs, JSON de ruleset, CODEOWNERS) pra que o fork nasça o mais
 próximo possível do padrão. O único passo manual por fork é importar
 os rulesets.
+
+---
+
+## Comandos de PR via comentário
+
+Inspirado no chat-ops do Prow (Kubernetes), o `command-handler.yml`
+interpreta comandos escritos em comentários de pull request. Restrito a
+mantenedores e colaboradores do repositório.
+
+| Comando                                  | Efeito                                               |
+| ---------------------------------------- | ---------------------------------------------------- |
+| `/approve`                               | Submete uma review aprovada no PR                    |
+| `/lgtm`                                  | Aplica a label `lgtm`                                |
+| `/hold` · `/unhold`                      | Aplica/remove `do-not-merge/hold` — bloqueia o merge |
+| `/label <nome>` · `/remove-label <nome>` | Gerencia uma label                                   |
+| `/assign [@user]`                        | Atribui o PR (a quem comentou, se sem `@user`)       |
+| `/unassign [@user]`                      | Remove a atribuição                                  |
+| `/cc @user`                              | Solicita review de alguém                            |
+| `/help`                                  | Comenta a lista de comandos                          |
+
+Um comentário pode conter vários comandos, um por linha. `/hold` casa
+com o `wip-guard.yml`: enquanto a label `do-not-merge/hold` estiver
+presente, o merge fica bloqueado.
+
+> Nota: `/approve` submete a review como o `github-actions[bot]`. Isso
+> **não** conta para `required_approving_review_count` de branch
+> protection — mas o ruleset deste curso usa `count: 0`, então o valor
+> do comando é o registro de processo, não desbloquear o merge.
 
 ---
 
