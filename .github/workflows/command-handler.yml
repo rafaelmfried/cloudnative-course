@@ -104,11 +104,13 @@ jobs:
                 [ -n "$arg" ] && gh pr edit "$PR" --repo "$REPO" --remove-label "$arg" \
                   && echo "/remove-label $arg aplicado" && handled=1 ;;
               /assign)
-                users="$(printf '%s' "${arg:-$ACTOR}" | tr -d '@' | tr -s '[:space:]' ',')"
+                users="$(printf '%s' "${arg:-$ACTOR}" | tr -d '@' | tr -s '[:space:]' ',' | sed 's/^,*//;s/,*$//')"
+                [ -z "$users" ] && users="$ACTOR"
                 gh pr edit "$PR" --repo "$REPO" --add-assignee "$users" \
                   && echo "/assign $users aplicado" && handled=1 ;;
               /unassign)
-                users="$(printf '%s' "${arg:-$ACTOR}" | tr -d '@' | tr -s '[:space:]' ',')"
+                users="$(printf '%s' "${arg:-$ACTOR}" | tr -d '@' | tr -s '[:space:]' ',' | sed 's/^,*//;s/,*$//')"
+                [ -z "$users" ] && users="$ACTOR"
                 gh pr edit "$PR" --repo "$REPO" --remove-assignee "$users" \
                   && echo "/unassign $users aplicado" && handled=1 ;;
               /cc)
