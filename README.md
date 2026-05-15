@@ -1,4 +1,4 @@
-# cloud-native-course
+# cloudnative-course
 
 [![PR Checks](https://github.com/rafaelmfried/cloudnative-course/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/rafaelmfried/cloudnative-course/actions/workflows/pr-checks.yml)
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-blue.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
@@ -37,7 +37,7 @@ entender **por que os patterns que usamos existem** — e quando NÃO usá-los.
 ## O que tem aqui
 
 ```
-cloud-native-course/
+cloudnative-course/
 ├── README.md          este arquivo
 ├── SYLLABUS.md        os 13 módulos detalhados
 ├── METHODOLOGY.md     como trabalhar (TDD, git flow, níveis)
@@ -72,8 +72,8 @@ Como aluno (refazer o caminho):
    precisa abrir PR no upstream. O fork é o teu portfolio.
 2. Clona o fork local e configura upstream:
    ```bash
-   git clone git@github.com:<seu-user>/cloud-native-course.git
-   cd cloud-native-course
+   git clone git@github.com:<seu-user>/cloudnative-course.git
+   cd cloudnative-course
    git remote add upstream <url-do-upstream>
    ```
 3. Lê `SYLLABUS.md`, `METHODOLOGY.md`, `ROADMAP.md`.

@@ -26,7 +26,7 @@ uma issue de dúvida está usando o repo exatamente como deve.
 
 ## Comportamento inaceitável
 
-- Linguagem ou imagens sexualizadas; atenção sexual indesedada.
+- Linguagem ou imagens sexualizadas; atenção sexual indesejada.
 - Comentários ofensivos, ataques pessoais ou políticos; trolling.
 - Assédio público ou privado.
 - Publicar informação privada de terceiros sem permissão.
@@ -49,11 +49,28 @@ espaços públicos quando alguém representa o projeto ou sua comunidade.
 
 ## Aplicação
 
+### Como reportar
+
 Casos de comportamento abusivo, de assédio ou de outra forma inaceitável
-podem ser reportados ao mantenedor. Todas as queixas serão analisadas e
-investigadas, resultando em uma resposta considerada necessária e
-apropriada às circunstâncias. O mantenedor é obrigado a manter
-confidencialidade em relação a quem reportou um incidente.
+devem ser reportados por um **canal privado** — nunca numa issue pública:
+
+- **GitHub Security Advisory** — no repositório:
+  **Security → Advisories → Report a vulnerability**. O formulário aceita
+  relatos de conduta, não só de segurança, e mantém o relato privado.
+- **Report abuse do GitHub** —
+  <https://github.com/contact/report-abuse> — para acionar o próprio
+  GitHub quando o incidente envolve a plataforma ou o mantenedor.
+
+> Em um fork, o canal de Security Advisory aponta para o fork do próprio
+> aluno. Se você usa este material num contexto de equipe, defina um
+> canal privado adicional (e-mail ou similar) e registre-o aqui.
+
+### Tratamento
+
+Todas as queixas serão analisadas e investigadas, resultando em uma
+resposta considerada necessária e apropriada às circunstâncias. O
+mantenedor é obrigado a manter confidencialidade em relação a quem
+reportou um incidente.
 
 ## Atribuição
 
