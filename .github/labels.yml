@@ -117,6 +117,9 @@
   description: "Segurar merge por decisão pendente"
 
 # ── triagem e estado ────────────────────────────────────────────────
+- name: "lgtm"
+  color: "0e8a16"
+  description: "Looks good to me — aplicada via /lgtm"
 - name: "needs-triage"
   color: "ededed"
   description: "Issue nova, ainda não avaliada"
