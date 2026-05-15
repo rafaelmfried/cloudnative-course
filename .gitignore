@@ -5,7 +5,11 @@
 ._*
 
 # Editores
-.vscode/
+# .vscode/settings.json é versionado de propósito — carrega a proteção
+# do CODEOWNERS (formatter off) pro fork de cada aluno.
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
