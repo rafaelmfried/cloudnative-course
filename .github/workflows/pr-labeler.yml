@@ -1,0 +1,93 @@
+name: PR labeler
+
+# Aplica labels automaticamente em cada PR:
+#  - area/* e module/*  → por caminho de arquivo (.github/labeler.yml)
+#  - kind/*             → pelo tipo no título Conventional Commit
+#  - size/*             → pelo número de linhas alteradas
+
+# pull_request_target (não pull_request): em PR vindo de fork, o
+# pull_request roda com GITHUB_TOKEN read-only e a aplicação de label
+# falha. pull_request_target roda com token de escrita. É seguro aqui
+# porque nenhum job faz checkout do código do PR — só usa a API.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+  # issues: write — labels são sub-recurso de issues na API REST; sem
+  # isso o `gh label create` do job kind-label não cria label inexistente
+  # (caso de fork onde o Labels sync ainda não rodou).
+  issues: write
+
+jobs:
+  # ── area/* e module/* por caminho ──────────────────────────────────
+  path-labels:
+    name: Label by path
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v6
+        with:
+          configuration-path: .github/labeler.yml
+          sync-labels: true
+
+  # ── kind/* pelo título do PR (Conventional Commit) ─────────────────
+  kind-label:
+    name: Label kind by title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Derive kind/* from PR title
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -e
+          type="${TITLE%%:*}"        # tudo antes do ':'
+          type="${type%%(*}"          # remove escopo '(...)'
+          type="$(echo "$type" | tr -d '[:space:]')"
+          case "$type" in
+            feat)               kind="kind/feature" ;;
+            fix)                kind="kind/fix" ;;
+            refactor)           kind="kind/refactor" ;;
+            docs)               kind="kind/docs" ;;
+            test)               kind="kind/test" ;;
+            chore|ci|build|perf|style) kind="kind/chore" ;;
+            *)
+              echo "Título não segue Conventional Commit reconhecido ('$type') — sem kind/*."
+              exit 0
+              ;;
+          esac
+          # --repo explícito: este job não faz checkout, então não há
+          # diretório git pro `gh` inferir o repositório. Sem --repo, o
+          # `gh` falha com "not a git repository".
+          # gh label create best-effort: cria a label se não existir (cor
+          # e descrição definitivas ficam a cargo do labels.yml); não
+          # sobrescreve se já existir.
+          gh label create "$kind" --repo "$REPO" --color 1d76db 2>/dev/null || true
+          echo "Aplicando $kind"
+          gh pr edit "$PR" --repo "$REPO" --add-label "$kind"
+
+  # ── size/* pelo volume de mudança ──────────────────────────────────
+  size-label:
+    name: Label size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: codelytv/pr-size-labeler@v1
+        with:
+          github_token: ${{ github.token }}
+          xs_label: "size/XS"
+          xs_max_size: "9"
+          s_label: "size/S"
+          s_max_size: "99"
+          m_label: "size/M"
+          m_max_size: "499"
+          l_label: "size/L"
+          l_max_size: "999"
+          xl_label: "size/XL"
+          message_if_xl: >
+            Este PR é grande (1000+ linhas). Considere dividir em PRs
+            menores — a metodologia do curso pede commits e PRs enxutos.
+          files_to_ignore: "pnpm-lock.yaml go.sum LICENSE"

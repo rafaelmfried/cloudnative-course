@@ -1,0 +1,80 @@
+# Auto-label de PR por caminho de arquivo (actions/labeler v5).
+# Aplica area/* e module/* conforme os arquivos que o PR toca.
+# kind/* e size/* são aplicados por outros jobs do pr-labeler.yml.
+
+"area/go":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/go/**"
+          - "modules/*/go/**"
+
+"area/node":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/node/**"
+          - "modules/*/node/**"
+
+"area/infra":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/infra/**"
+
+"area/ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "commitlint.config.js"
+          - ".editorconfig"
+          - ".prettierignore"
+
+"area/meta":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "README.md"
+          - "SYLLABUS.md"
+          - "METHODOLOGY.md"
+          - "ROADMAP.md"
+          - "CONTRIBUTING.md"
+          - "CODE_OF_CONDUCT.md"
+          - "SECURITY.md"
+          - "CHANGELOG.md"
+
+"module/01":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/01-*/**"]
+"module/02":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/02-*/**"]
+"module/03":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/03-*/**"]
+"module/04":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/04-*/**"]
+"module/05":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/05-*/**"]
+"module/06":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/06-*/**"]
+"module/07":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/07-*/**"]
+"module/08":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/08-*/**"]
+"module/09":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/09-*/**"]
+"module/10":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/10-*/**"]
+"module/11":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/11-*/**"]
+"module/12":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/12-*/**"]
+"module/13":
+  - changed-files:
+      - any-glob-to-any-file: ["modules/13-*/**"]

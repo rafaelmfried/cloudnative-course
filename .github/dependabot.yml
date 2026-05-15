@@ -1,0 +1,44 @@
+# Dependabot — atualização automatizada de dependências.
+# Conforme METHODOLOGY: patch é automático, minor/major exigem revisão.
+# https://docs.github.com/code-security/dependabot
+
+version: 2
+updates:
+  # GitHub Actions usadas nos workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - dependencies
+      - ci
+
+  # Módulo Go da aplicação (passa a valer quando app/go/go.mod existir)
+  - package-ecosystem: gomod
+    directory: /app/go
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - dependencies
+      - go
+    # Major bump exige decisão arquitetural — Dependabot abre, humano decide.
+    open-pull-requests-limit: 5
+
+  # Pacotes Node da aplicação (passa a valer quando app/node/package.json existir)
+  - package-ecosystem: npm
+    directory: /app/node
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - dependencies
+      - node
+    open-pull-requests-limit: 5

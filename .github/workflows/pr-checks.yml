@@ -15,6 +15,44 @@ permissions:
   pull-requests: write
 
 jobs:
+  # ── Valida o gitflow: branch de origem segue a convenção ───────────
+  # Rulesets do GitHub não restringem o NOME da branch de origem de um
+  # PR — só protegem o destino. Este job enforça o que o ruleset não
+  # consegue: PR para module/* tem que vir de feature/*.
+  branch-naming:
+    name: Branch naming convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate gitflow branch naming
+        run: |
+          base="${{ github.event.pull_request.base.ref }}"
+          head="${{ github.event.pull_request.head.ref }}"
+          echo "PR: $head -> $base"
+          case "$base" in
+            module/*)
+              if [[ "$head" != feature/* ]]; then
+                echo "::error::PR para 'module/*' deve vir de 'feature/*'. Recebido: '$head'."
+                echo "Gitflow do curso: main <- module/NN <- feature/*"
+                exit 1
+              fi
+              echo "OK: feature/* -> module/* respeita o gitflow."
+              ;;
+            main|master)
+              case "$head" in
+                module/*|chore/*|docs/*|ci/*|fix/*|hotfix/*|style/*|dependabot/*)
+                  echo "OK: '$head' -> '$base' permitido."
+                  ;;
+                *)
+                  echo "::error::PR para '$base' deve vir de module/*, chore/*, docs/*, ci/*, fix/*, hotfix/*, style/* ou dependabot/*. Recebido: '$head'."
+                  exit 1
+                  ;;
+              esac
+              ;;
+            *)
+              echo "Base '$base' sem regra de naming — OK."
+              ;;
+          esac
+
   # ── Verifica formato de commits ────────────────────────────────────
   commit-lint:
     name: Conventional Commits
@@ -25,7 +63,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "24"
 
@@ -52,7 +90,7 @@ jobs:
       modules: ${{ steps.filter.outputs.modules }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -161,7 +199,7 @@ jobs:
           version: 9
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "24"
           cache: "pnpm"
@@ -263,7 +301,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Post checklist comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const body = `## 🤖 Course PR Checks
