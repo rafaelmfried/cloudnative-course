@@ -5,8 +5,12 @@ name: PR labeler
 #  - kind/*             → pelo tipo no título Conventional Commit
 #  - size/*             → pelo número de linhas alteradas
 
+# pull_request_target (não pull_request): em PR vindo de fork, o
+# pull_request roda com GITHUB_TOKEN read-only e a aplicação de label
+# falha. pull_request_target roda com token de escrita. É seguro aqui
+# porque nenhum job faz checkout do código do PR — só usa a API.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened, edited]
 
 permissions:
@@ -51,6 +55,12 @@ jobs:
               exit 0
               ;;
           esac
+          # Garante que a label exista antes de aplicá-la — gh pr edit
+          # --add-label falha se a label não existir no repo (caso de um
+          # fork onde o Labels sync ainda não rodou). O create sem --force
+          # não sobrescreve a label se ela já existir (cor/descrição
+          # ficam a cargo do labels.yml).
+          gh label create "$kind" --color 1d76db 2>/dev/null || true
           echo "Aplicando $kind"
           gh pr edit "$PR" --add-label "$kind"
 
